@@ -12,7 +12,7 @@
 				// START... container setup
 				// the container method comes from https://goo.gl/PScPbf
 				const outerContainer = d3_container.container()
-				    .margin(20)
+				    .margin(50)
 				    .width(960)
 				    .height(500);
 
@@ -30,29 +30,35 @@
 				var content =  outerContainer.content();
 				// END... container setup
 
+				// Extents set the stage for the rest of the code we write
 				const xExtent = d3.extent(data, d => d.year);
 				const yExtent = d3.extent(data, d => d.poultry);
 
 				// out scales will reflec the exent of our range
 				const xScale = d3.scaleLinear()
 					.domain(xExtent)
-					.range([0, 960]);
+					.range([0, innerWidth]);
 				const yScale = d3.scaleLinear()
 					.domain(yExtent)
-					.range([0, 500]);
+					.range([0, innerHeight]);
 
+				// With the scales for x and y we can create axises.
 				const xAxis = d3.axisBottom()
 					.scale(xScale);
 				content
 					.append("g")
 					.attr("id", "xAxisG")
 					.call(xAxis);
-				const yAxis = d3.axisRight()
+				const yAxis = d3.axisLeft()
 					.scale(yScale);
 				content
 					.append("g")
 					.attr("id", "xAxisG")
 					.call(yAxis);
+
+				// Let's move these axis around a bit
+				content.select("#xAxisG")
+					.attr('transform', 'translate(0,' + innerHeight + ')');
 			})
 		</script>
 	</body>
