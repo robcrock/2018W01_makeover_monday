@@ -1,104 +1,139 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<style> /* set the CSS */
-
-.line {
-  fill: none;
-  stroke: steelblue;
-  stroke-width: 2px;
-}
-
+<head>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
+</head>
+<style>
+	/* work to emulate this style https://projects.fivethirtyeight.com/trump-approval-ratings/?ex_cid=rrpromo */
+	h1 {
+		font-family: "Raleway";
+	}
+	h2 {
+		font-family: "Raleway";
+	}
+	footer {
+		font-family: "Raleway";
+	}
+	.line {
+	  fill: none;
+	  stroke: steelblue;
+	  stroke-width: 2px;
+	}
+	#source {
+		float: left;
+	}
+	#author {
+		float: right;
+	}
+	.axis-title {
+		font-family: "Raleway";
+	}
+	#poultryPath {
+		fill:  none;
+		stroke:  #7EB2D4;
+		stroke-width: 2px;
+	}
+	#beefPath {
+		fill:  none;
+		stroke:  #B5DFD0;
+		stroke-width: 2px;
+	}
+	#porkPath {
+		fill:  none;
+		stroke:  #DEDCEA;
+		stroke-width: 2px;
+	}
 </style>
 <body>
-
-<!-- load the d3.js library -->
-<script src="https://d3js.org/d3.v4.min.js"></script>
+<h1>Poultry consumption has been flying high since 1989</h1>
+<h2>US per capita consumption from 1965 to 2017</h2>
+<div id="chart"></div>
+<footer>
+	<div id="source">SOURCE | National Chicken Council</div>
+	<div id="author">DESIGN | @robcrock for #MakeoverMonday</div>
+</footer>
+<!-- D3 CODE -->
 <script>
+	// set the dimensions and margins of the graph
+	var margin = {top: 20, right: 20, bottom: 30, left: 50},
+	    width = 960 - margin.left - margin.right,
+	    height = 500 - margin.top - margin.bottom;
 
-// set the dimensions and margins of the graph
-var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+	// set the ranges
+	var x = d3.scaleLinear()
+		.range([0, width]);
+	var y = d3.scaleLinear()
+		.range([height, 0]);
 
-// parse the date / time
-// var parseTime = d3.timeParse("%d-%b-%y");
+	// Create seperate path generators for each line
+	var poultryPath = d3.line()
+	    .x(function(d) { return x(d.year); })
+	    .y(function(d) { return y(d.poultry); });
+	var beefPath = d3.line()
+	    .x(function(d) { return x(d.year); })
+	    .y(function(d) { return y(d.beef); });
+	var porkPath = d3.line()
+	    .x(function(d) { return x(d.year); })
+	    .y(function(d) { return y(d.pork); });
 
-// set the ranges
-var x = d3.scaleTime().range([0, width]);
-var y = d3.scaleLinear().range([height, 0]);
+	// append the svg obgect to the body of the page
+	// appends a 'group' element to 'svg'
+	// moves the 'group' element to the top left margin
+	var svg = d3.select("#chart")
+		.append("svg")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom)
+	  .append("g")
+	    .attr("transform",
+	          "translate(" + margin.left + "," + margin.top + ")");
 
-// define the 1st line
-var valueline = d3.line()
-    .x(function(d) { return x(d.date); })
-    .y(function(d) { return y(d.poultry); });
+	// Get the data
+	d3.csv("data.csv", function(error, data) {
+	  if (error) throw error;
 
-// define the 2nd line
-var valueline2 = d3.line()
-    .x(function(d) { return x(d.date); })
-    .y(function(d) { return y(d.beef); });
+    x.domain(d3.extent(data, function(d) { return d.year; }));
+    y.domain([0, d3.max(data, function(d) {
+  	  return Math.max(d.poultry); })]);
 
-// define the 3rd line
-var valueline3 = d3.line()
-    .x(function(d) { return x(d.date); })
-    .y(function(d) { return y(d.pork); });
+	  // Add the X Axis
+	  svg.append("g")
+	      .attr("class", "x axis")
+	      .attr("transform", "translate(0," + height + ")")
+	      .call(d3.axisBottom(x));
 
-// append the svg obgect to the body of the page
-// appends a 'group' element to 'svg'
-// moves the 'group' element to the top left margin
-var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")");
+	  // Add the Y Axis
+	  svg.append("g")
+	      .attr("class", "y axis")
+	      .call(d3.axisLeft(y)
+	      	.ticks(10, "s")
+	      	.tickSize(-width))
+	      .append("text")
+	        .attr("class", "axis-title")
+	        .attr("y", -10)
+	        .attr("x", -25)
+	        .attr("dy", ".71em")
+	        .style("text-anchor", "start")
+	        .attr("fill", "#5D6971")
+	        .text("Per capita consumption (lbs)");
 
-// Get the data
-d3.csv("data.csv", function(error, data) {
-  if (error) throw error;
+    svg.selectAll(".tick:not(:first-of-type) line")
+    	.attr("stroke", "#f0f0f0");
 
-  // format the data
-  data.forEach(function(d) {
-      d.date = +d.year;
-      d.poultry = +d.poultry;
-      d.beef = +d.beef;
-      d.pork = +d.pork;
-  });
+	  // Append individual lines
+	  svg.append("path")
+	      .data([data])
+	      .attr("id", "beefPath")
+	      .attr("d", beefPath);
+	  svg.append("path")
+	      .data([data])
+	      .attr("id", "porkPath")
+	      .attr("d", porkPath);
+	  svg.append("path")
+	      .data([data])
+	      .attr("id", "poultryPath")
+	      .attr("d", poultryPath);
 
-  // Scale the range of the data
-  x.domain(d3.extent(data, function(d) { return d.date; }));
-  y.domain([0, d3.max(data, function(d) {
-	  return Math.max(d.poultry); })]);
-
-  // Add the valueline path.
-  svg.append("path")
-      .data([data])
-      .attr("class", "line")
-      .attr("d", valueline);
-
-  // Add the valueline2 path.
-  svg.append("path")
-      .data([data])
-      .attr("class", "line")
-      .style("stroke", "red")
-      .attr("d", valueline2);
-
-  // Add the valueline3 path.
-  svg.append("path")
-      .data([data])
-      .attr("class", "line")
-      .style("stroke", "orange")
-      .attr("d", valueline3);
-
-  // Add the X Axis
-  svg.append("g")
-      .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(x));
-
-  // Add the Y Axis
-  svg.append("g")
-      .call(d3.axisLeft(y));
-
-});
-
+	});
 </script>
 </body>
