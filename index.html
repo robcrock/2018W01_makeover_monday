@@ -92,15 +92,19 @@
 	var yAxis = d3.axisLeft(y);
 
 	// Create seperate path generators for each line
+	const lambdaXScale = d => x(d.year);
 	var poultryPath = d3.line()
-	    .x(function(d) { return x(d.year); })
-	    .y(function(d) { return y(d.poultry); });
+		.curve(d3.curveCardinal)
+    .x(lambdaXScale)
+    .y(function(d) { return y(d.poultry); });
 	var beefPath = d3.line()
-	    .x(function(d) { return x(d.year); })
-	    .y(function(d) { return y(d.beef); });
+		.curve(d3.curveCardinal)
+    .x(lambdaXScale)
+    .y(function(d) { return y(d.beef); });
 	var porkPath = d3.line()
-	    .x(function(d) { return x(d.year); })
-	    .y(function(d) { return y(d.pork); });
+		.curve(d3.curveCardinal)
+    .x(lambdaXScale)
+    .y(function(d) { return y(d.pork); });
 
 	// Get the data
 	d3.csv("data.csv", function(error, data) {
@@ -124,19 +128,16 @@
 
 	  // Append individual lines
 	  g.append("path")
-	      .data([data])
 	      .attr("id", "beefPath")
-	      .attr("d", beefPath)
+	      .attr("d", beefPath(data))
 	      .attr("transform", "translate(" + innerMarginLeft + ",0)");
 	  g.append("path")
-	      .data([data])
 	      .attr("id", "porkPath")
-	      .attr("d", porkPath)
+	      .attr("d", porkPath(data))
 	      .attr("transform", "translate(" + innerMarginLeft + ",0)");
 	  g.append("path")
-	      .data([data])
 	      .attr("id", "poultryPath")
-	      .attr("d", poultryPath)
+	      .attr("d", poultryPath(data))
 	      .attr("transform", "translate(" + innerMarginLeft + ",0)");
 
 	});
