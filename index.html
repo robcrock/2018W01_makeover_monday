@@ -4,6 +4,7 @@
 	<script src="https://d3js.org/d3.v4.min.js"></script>
 	<link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
 	<script src="http://binaworks.github.io/scripts/d3-container.v0.0.1.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.3/d3-legend.min.js"></script>
 </head>
 <style>
 	/* work to emulate this style https://projects.fivethirtyeight.com/trump-approval-ratings/?ex_cid=rrpromo */
@@ -92,15 +93,19 @@
 	var yAxis = d3.axisLeft(y);
 
 	// Create seperate path generators for each line
+	const lambdaXScale = d => x(d.year);
 	var poultryPath = d3.line()
-	    .x(function(d) { return x(d.year); })
-	    .y(function(d) { return y(d.poultry); });
+		.curve(d3.curveCardinal)
+    .x(lambdaXScale)
+    .y(function(d) { return y(d.poultry); });
 	var beefPath = d3.line()
-	    .x(function(d) { return x(d.year); })
-	    .y(function(d) { return y(d.beef); });
+		.curve(d3.curveCardinal)
+    .x(lambdaXScale)
+    .y(function(d) { return y(d.beef); });
 	var porkPath = d3.line()
-	    .x(function(d) { return x(d.year); })
-	    .y(function(d) { return y(d.pork); });
+		.curve(d3.curveCardinal)
+    .x(lambdaXScale)
+    .y(function(d) { return y(d.pork); });
 
 	// Get the data
 	d3.csv("data.csv", function(error, data) {
@@ -124,21 +129,47 @@
 
 	  // Append individual lines
 	  g.append("path")
-	      .data([data])
 	      .attr("id", "beefPath")
-	      .attr("d", beefPath)
+	      .attr("d", beefPath(data))
 	      .attr("transform", "translate(" + innerMarginLeft + ",0)");
 	  g.append("path")
-	      .data([data])
 	      .attr("id", "porkPath")
-	      .attr("d", porkPath)
+	      .attr("d", porkPath(data))
 	      .attr("transform", "translate(" + innerMarginLeft + ",0)");
 	  g.append("path")
-	      .data([data])
 	      .attr("id", "poultryPath")
-	      .attr("d", poultryPath)
+	      .attr("d", poultryPath(data))
 	      .attr("transform", "translate(" + innerMarginLeft + ",0)");
 
 	});
+
+	// *******************************
+	// ***** Create color legend *****
+
+	var ordinal = d3.scaleOrdinal()
+	  .domain(["Poultry", "Beef", "Pork"])
+	  .range([ "#7EB2D4", "#B5DFD0", "#DEDCEA"]);
+
+	var svg = d3.select("svg");
+
+	svg.append("g")
+	  .attr("class", "legendOrdinal")
+	  .attr("transform", "translate(735,425)");
+
+	var legendOrdinal = d3.legendColor()
+	  //d3 symbol creates a path-string, for example
+	  //"M0,-8.059274488676564L9.306048591020996,
+	  //8.059274488676564 -9.306048591020996,8.059274488676564Z"
+	  .shape("path", d3.symbol().type(d3.symbolCircle).size(150)())
+	  .shapePadding(75)
+	  //use cellFilter to hide the "e" cell
+	  .orient("horizontal")
+	  .scale(ordinal);
+
+	svg.select(".legendOrdinal")
+	  .call(legendOrdinal);
+
+	 // ******************************
+	 // ******************************
 </script>
 </body>
