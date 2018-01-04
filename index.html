@@ -3,21 +3,29 @@
 <head>
 	<script src="https://d3js.org/d3.v4.min.js"></script>
 	<link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
+	<script src="http://binaworks.github.io/scripts/d3-container.v0.0.1.min.js"></script>
 </head>
 <style>
 	/* work to emulate this style https://projects.fivethirtyeight.com/trump-approval-ratings/?ex_cid=rrpromo */
+	#container {
+		width: 960px;
+	}
 	h1 {
 		font-family: "Raleway";
+		font-weight: 700;
+		color: #222;
 	}
 	h2 {
 		font-family: "Raleway";
+		font-weight: 300;
+		color: #222;
 	}
 	footer {
 		font-family: "Raleway";
+		color: #000
 	}
 	.line {
 	  fill: none;
-	  stroke: steelblue;
 	  stroke-width: 2px;
 	}
 	#source {
@@ -25,9 +33,6 @@
 	}
 	#author {
 		float: right;
-	}
-	.axis-title {
-		font-family: "Raleway";
 	}
 	#poultryPath {
 		fill:  none;
@@ -46,25 +51,45 @@
 	}
 </style>
 <body>
-<h1>Poultry consumption has been flying high since 1989</h1>
-<h2>US per capita consumption from 1965 to 2017</h2>
-<div id="chart"></div>
-<footer>
-	<div id="source">SOURCE | National Chicken Council</div>
-	<div id="author">DESIGN | @robcrock for #MakeoverMonday</div>
-</footer>
+<div id="container">
+	<h1>Poultry consumption has been flying high since 1989</h1>
+	<h2>US per capita consumption from 1965 to 2017</h2>
+	<footer>
+		<div id="source">SOURCE | National Chicken Council</div>
+		<div id="author">DESIGN | @robcrock for #MakeoverMonday</div>
+	</footer>
+</div>
 <!-- D3 CODE -->
 <script>
-	// set the dimensions and margins of the graph
-	var margin = {top: 20, right: 20, bottom: 30, left: 50},
-	    width = 960 - margin.left - margin.right,
-	    height = 500 - margin.top - margin.bottom;
+	var outerContainer = d3_container.container()
+	    .width(960)
+	    .height(500);
 
-	// set the ranges
+	var innerContainer = d3_container.container().margin(20);
+
+	var svg = d3.select("h2")
+		.append("svg");
+
+	svg.call(outerContainer);
+
+	var content =  outerContainer.content();
+
+	content.call(innerContainer);
+
+	var g = innerContainer.content(),
+	    innerWidth = innerContainer.contentWidth(),
+	    innerHeight = innerContainer.contentHeight(),
+	    innerMarginLeft = innerContainer.margin().left();
+
 	var x = d3.scaleLinear()
-		.range([0, width]);
+	    .range([0, innerWidth]);
 	var y = d3.scaleLinear()
-		.range([height, 0]);
+	    .range([innerHeight, 0]);
+
+	var xAxis = d3.axisBottom(x)
+		.tickFormat(d3.format(""));
+
+	var yAxis = d3.axisLeft(y);
 
 	// Create seperate path generators for each line
 	var poultryPath = d3.line()
@@ -77,17 +102,6 @@
 	    .x(function(d) { return x(d.year); })
 	    .y(function(d) { return y(d.pork); });
 
-	// append the svg obgect to the body of the page
-	// appends a 'group' element to 'svg'
-	// moves the 'group' element to the top left margin
-	var svg = d3.select("#chart")
-		.append("svg")
-	    .attr("width", width + margin.left + margin.right)
-	    .attr("height", height + margin.top + margin.bottom)
-	  .append("g")
-	    .attr("transform",
-	          "translate(" + margin.left + "," + margin.top + ")");
-
 	// Get the data
 	d3.csv("data.csv", function(error, data) {
 	  if (error) throw error;
@@ -97,42 +111,33 @@
   	  return Math.max(d.poultry); })]);
 
 	  // Add the X Axis
-	  svg.append("g")
-	      .attr("class", "x axis")
-	      .attr("transform", "translate(0," + height + ")")
-	      .call(d3.axisBottom(x));
+	  g.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(" + innerMarginLeft + "," + innerHeight + ")")
+      .call(xAxis);
 
 	  // Add the Y Axis
-	  svg.append("g")
+	  g.append("g")
 	      .attr("class", "y axis")
-	      .call(d3.axisLeft(y)
-	      	.ticks(10, "s")
-	      	.tickSize(-width))
-	      .append("text")
-	        .attr("class", "axis-title")
-	        .attr("y", -10)
-	        .attr("x", -25)
-	        .attr("dy", ".71em")
-	        .style("text-anchor", "start")
-	        .attr("fill", "#5D6971")
-	        .text("Per capita consumption (lbs)");
-
-    svg.selectAll(".tick:not(:first-of-type) line")
-    	.attr("stroke", "#f0f0f0");
+	      .attr("transform", "translate(" + innerMarginLeft + ",0)")
+	      .call(yAxis);
 
 	  // Append individual lines
-	  svg.append("path")
+	  g.append("path")
 	      .data([data])
 	      .attr("id", "beefPath")
-	      .attr("d", beefPath);
-	  svg.append("path")
+	      .attr("d", beefPath)
+	      .attr("transform", "translate(" + innerMarginLeft + ",0)");
+	  g.append("path")
 	      .data([data])
 	      .attr("id", "porkPath")
-	      .attr("d", porkPath);
-	  svg.append("path")
+	      .attr("d", porkPath)
+	      .attr("transform", "translate(" + innerMarginLeft + ",0)");
+	  g.append("path")
 	      .data([data])
 	      .attr("id", "poultryPath")
-	      .attr("d", poultryPath);
+	      .attr("d", poultryPath)
+	      .attr("transform", "translate(" + innerMarginLeft + ",0)");
 
 	});
 </script>
