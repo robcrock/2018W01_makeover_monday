@@ -4,12 +4,19 @@
 		<script src="https://d3js.org/d3.v4.js"></script>
 	<script src="http://binaworks.github.io/scripts/d3-container.v0.0.1.min.js"></script>
 		<style>
+			.inner {
+			  fill: #ccc;
+			  stroke: #000;
+			  stroke-dasharray: 3, 4;
+			}
 		</style>
 	</head>
 	<body>
 		<script>
-			d3.csv("data.csv", function(data) {
-				// START... container setup
+			d3.csv("data.csv", lineChart);
+
+			function lineChart(data) {
+				// ********** START... container setup
 				// the container method comes from https://goo.gl/PScPbf
 				const outerContainer = d3_container.container()
 				    .margin(50)
@@ -20,46 +27,58 @@
 				    innerWidth = outerContainer.contentWidth(),
 				    innerHeight = outerContainer.contentHeight();
 
-				var innerContainer = d3_container.container().margin(60),
-				    padding = innerContainer.margin();
+				var innerContainer = d3_container.container();
 
-				 var svg = d3.select("body").append("svg");
+			 	var svg = d3.select("body").append("svg");
 
-				 svg.call(outerContainer);
+			 	svg.call(outerContainer);
 
 				var content =  outerContainer.content();
-				// END... container setup
 
-				// Extents set the stage for the rest of the code we write
-				const xExtent = d3.extent(data, d => d.year);
-				const yExtent = d3.extent(data, d => d.poultry);
+				content.call(innerContainer);
+				var g = innerContainer.content(),
+				    width = innerContainer.contentWidth(),
+				    height = innerContainer.contentHeight();
 
-				// out scales will reflec the exent of our range
-				const xScale = d3.scaleLinear()
-					.domain(xExtent)
-					.range([0, innerWidth]);
-				const yScale = d3.scaleLinear()
-					.domain(yExtent)
-					.range([0, innerHeight]);
+		    // Extents set the stage for the rest of the code we write
+		    const xExtent = d3.extent(data, d => d.year);
+		    const yExtent = d3.extent(data, d => d.poultry);
 
-				// With the scales for x and y we can create axises.
-				const xAxis = d3.axisBottom()
-					.scale(xScale);
-				content
-					.append("g")
-					.attr("id", "xAxisG")
-					.call(xAxis);
-				const yAxis = d3.axisLeft()
-					.scale(yScale);
-				content
-					.append("g")
-					.attr("id", "xAxisG")
-					.call(yAxis);
+				 var x = d3.scaleLinear()
+				     .domain(xExtent)
+				     .range([0, width]);
 
-				// Let's move these axis around a bit
-				content.select("#xAxisG")
-					.attr('transform', 'translate(0,' + innerHeight + ')');
-			})
+				 var y = d3.scaleLinear()
+				     .domain(yExtent)
+				     .range([100, 0]);
+
+				 var xAxis = d3.axisBottom(x);
+
+				 var yAxis = d3.axisLeft(y);
+
+				 g.append("g")
+				     .attr("class", "x axis")
+				     .attr("transform", "translate(0," + height + ")")
+				     .call(xAxis);
+
+				 g.append("g")
+				     .attr("class", "y axis")
+				     .call(yAxis);
+
+			 	const poultryLine = d3.line()
+			 		.x(d => x(d.year))
+			 		.y(d => y(d.poultry));
+
+			 	g.append("path")
+			 		.attr("d", poultryLine(data))
+			 		.attr("fill", "none")
+			 		.attr("stroke", "#FE9A22")
+			 		.attr("stroke-width", 2);
+				// ********** END... container setup
+
+				// ********** START... drawing lines
+
+			}
 		</script>
 	</body>
 </html>
